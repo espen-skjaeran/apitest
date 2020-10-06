@@ -1,0 +1,254 @@
+---
+openapi: "3.0.0"
+info:
+  title: "OfferAPI's Notification API"
+  description: "This defines the Notification API in OfferAPI, where operators are\
+    \ allowed to notify OfferAPI on important changes in state of a subscriber. Supporting\
+    \ notifications that a single user balance (plan time, -volume, or monetary balance)\
+    \ is empty or at a triggering treshold, or one of a user's plan is (almost) consumed."
+  version: "1.2"
+servers:
+- url: "https://api.ddt.telenor.io/notify"
+security:
+- application:
+  - "cco.dd.notify.dtac.single"
+paths:
+  /{operator}/v1/single:
+    post:
+      description: "Notify event on an individual subscriber"
+      parameters:
+      - name: "operator"
+        in: "path"
+        description: "operator code for notifying operator"
+        required: true
+        style: "simple"
+        explode: false
+        schema:
+          type: "string"
+      - name: "idValue"
+        in: "query"
+        description: "The user identifier string."
+        required: true
+        style: "form"
+        explode: true
+        schema:
+          type: "string"
+      - name: "idType"
+        in: "query"
+        description: "The type of the userId in idValue. Can be either MSISDN or CPID"
+        required: true
+        style: "form"
+        explode: true
+        schema:
+          type: "string"
+          enum:
+          - "MSISDN"
+          - "CPID"
+      - name: "override"
+        in: "query"
+        description: "If present and true, notification quotas will not be checked\
+          \ before notifying to destination"
+        required: false
+        style: "form"
+        explode: true
+        schema:
+          type: "boolean"
+      requestBody:
+        description: "info about the notification to send"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotifyRequest"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+        "400":
+          description: "Bad request (missing mandatory query parameters)"
+        "401":
+          description: "Unauthorized (missing or unauthorized access token)"
+        "403":
+          description: "Forbidden (user has not given consent to notifications)"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "User record not found (bad userId, or user is not known to\
+            \ OfferAPI)"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: "Bad userID (Not able to decode CPID, or flow does not support\
+            \ this type of user ID)"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: "Too many requests (notification quota exceeded for this user)"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server Internal Error (OfferAPI internal failure)"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: "Bad gateway (upstream notification failed)"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    NotifyRequest:
+      required:
+      - "transactionId"
+      - "type"
+      type: "object"
+      properties:
+        transactionId:
+          maxLength: 128
+          minLength: 3
+          type: "string"
+          description: "Operator-unique transaction ID for this notification. Duplicated\
+            \ transactionIds may be rejected. Free alphanumeric string of max 128\
+            \ characters, we recommend a UUID."
+          example: "a9d37c79-1760-4008-a468-c42e38a5c90e"
+        type:
+          type: "string"
+          description: "describes the state of the subscriber (why a notification\
+            \ is needed)"
+          example: "out-of-data"
+          enum:
+          - "low-data"
+          - "out-of-data"
+          - "pay-as-you-go"
+          - "pack-near-consumption"
+          - "pack-consumed"
+          - "pack-expired"
+          - "pack-near-expiry"
+          - "low-monetary-balance"
+          - "monetary-reload"
+        messages:
+          type: "array"
+          description: "Notification message in multiple languages"
+          items:
+            type: "object"
+            properties:
+              language:
+                type: "string"
+                description: "ISO 639-1 code of language used in next field, message"
+                example: "en"
+              message:
+                type: "string"
+                description: "Unicode"
+                example: "you are running out of data"
+        planDetails:
+          required:
+          - "planId"
+          type: "object"
+          properties:
+            planId:
+              type: "string"
+              description: "Uniquely identifies the planID of the user's plan (almost)\
+                \ consumed."
+            balance:
+              type: "number"
+              description: "Current available data balance of plan alerted about"
+            quota:
+              type: "number"
+              description: "Initial data balance of plan alerted about."
+            planName:
+              type: "array"
+              description: "The same string in multiple languages"
+              items:
+                type: "object"
+                properties:
+                  language:
+                    type: "string"
+                    description: "ISO 639-1 code of language used in next field, message"
+                    example: "en"
+                  name:
+                    type: "string"
+                    description: "Unicode"
+                    example: "Super plan #1"
+            expiry:
+              type: "string"
+              description: "RFC 3339 formatted date and time when pack will or did\
+                \ expire."
+              format: "date-time"
+              example: "2019-01-01T00:00:00Z"
+          description: "Additional data about dataplans being consumed. Should be\
+            \ set if type is plan-consumed or plan-near-consumption"
+        subscriptionType:
+          type: "string"
+          description: "Whether user pays up front or is billed afterwards"
+          enum:
+          - "prepaid"
+          - "postpaid"
+        overUsagePolicy:
+          type: "string"
+          description: "The action taken on the subscriber's data connection once\
+            \ the last pack is consumed or expired."
+          enum:
+          - "throttled"
+          - "pay-as-you-go"
+          - "blocked"
+        monetaryBalance:
+          required:
+          - "currencyCode"
+          type: "object"
+          properties:
+            totalBalance:
+              type: "number"
+              description: "Subscriber's current total monetary balance. Meaningful\
+                \ on prepaid accounts."
+              format: "decimal"
+            deltaBalance:
+              type: "number"
+              description: "Recent change in monetary balance (positive - topup, or\
+                \ negative - consumption) related to this event. Should be present\
+                \ if event type is low-monetary-balance or monetary-reload. May be\
+                \ present on others."
+              format: "decimal"
+            currency:
+              type: "string"
+              description: "ISO 4217 formatted currency code, applies to all balances."
+              format: "currency"
+          description: "Holds details about a subscriber's monetary balance."
+    ErrorResponse:
+      required:
+      - "errorType"
+      type: "object"
+      properties:
+        errorType:
+          type: "string"
+          description: "Recognizable error type"
+          enum:
+          - "NO_CPID"
+          - "QUOTA_EXCEEDED"
+          - "NOTIFCIATION_FAILED_TO_RECEIVER"
+          - "NO_CONSENT"
+          - "INTERNAL_ERROR"
+        description:
+          type: "string"
+          description: "Human-readable error description"
+          example: "Operation failed because user hasn't given consent to this type\
+            \ of notification"
+      description: "Error response (content)"
+  securitySchemes:
+    application:
+      type: "oauth2"
+      flows:
+        clientCredentials:
+          tokenUrl: "https://connect.telenordigital.com/oauth/tokeninfo"
+          scopes:
+            cco.dd.notify.dtac.single: "allows notifying of individual subscribers"
+            cco.dd.notify.dtac.bulk: "allows running bulk campaigns"
