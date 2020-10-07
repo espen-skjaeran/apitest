@@ -9,7 +9,8 @@ a list of relevant offers, and activating one of the provided offers.
 Notifications can also be sent to service providers on events in the telco stack, 
 e.g. when user is about to run out of data or a purchase has been activated.  
 ---
-All API requests to Millom must be authenticated with [OAuth 2.0 client credentials](https://oauth.net/2/grant-types/client-credentials/) access token.
+All API requests to Millom must be authenticated with [OAuth 2.0 client credentials](https://oauth.net/2/grant-types/client-credentials/) access token. 
+The access token should be cached and reused until (almost) expiry.
 Contact Millom for agreements and credentials.  
 
 ![Authorization example](/images/authorization.svg)
