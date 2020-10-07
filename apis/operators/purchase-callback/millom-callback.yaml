@@ -4,9 +4,7 @@ info:
   description: "Asynchronous callbacks with result from previous activations. The\
     \ transaction ID provided must match an outstanding activation call to succeed."
   version: "1.0.0"
-  title: "DDT callback API"
-host: "virtserver.swaggerhub.com"
-basePath: "/espens/callback/1.0.0"
+  title: "DDT callback API""
 schemes:
 - "https"
 security:
