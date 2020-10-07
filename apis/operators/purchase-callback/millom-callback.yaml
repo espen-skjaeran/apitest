@@ -1,12 +1,12 @@
 ---
-swagger: "2.0"
+openapi: "3.0.0"
 info:
+  title: "DDT callback API"
   description: "Asynchronous callbacks with result from previous activations. The\
     \ transaction ID provided must match an outstanding activation call to succeed."
-  version: "1.0.0"
-  title: "Millom purchase callback API""
-schemes:
-- "https"
+  version: "1.0.1"
+servers:
+- url: "https://api.ddt.telenor.io/callback/1.0.0"
 security:
 - application:
   - "cco.dd.data-plan.inquire"
@@ -20,38 +20,47 @@ paths:
         in: "path"
         description: "operator code for notifying operator (TP, GP)"
         required: true
-        type: "string"
+        style: "simple"
+        explode: false
+        schema:
+          type: "string"
       - name: "idValue"
         in: "query"
         description: "The user identifier string."
         required: true
-        type: "string"
+        style: "form"
+        explode: true
+        schema:
+          type: "string"
       - name: "idType"
         in: "query"
         description: "The type of the userId in idValue. Can be either MSISDN or CPID"
         required: true
-        type: "string"
-        enum:
-        - "MSISDN"
-        - "CPID"
-      - in: "body"
-        name: "transaction ID"
-        required: false
+        style: "form"
+        explode: true
         schema:
-          type: "object"
-          required:
-          - "transactionId"
-          properties:
-            transactionId:
-              type: "string"
-            message:
-              type: "string"
-            appId:
-              type: "string"
-            errorType:
-              type: "string"
-            dryRun:
-              type: "boolean"
+          type: "string"
+          enum:
+          - "MSISDN"
+          - "CPID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+              - "transactionId"
+              type: "object"
+              properties:
+                transactionId:
+                  type: "string"
+                message:
+                  type: "string"
+                appId:
+                  type: "string"
+                errorType:
+                  type: "string"
+                dryRun:
+                  type: "boolean"
       responses:
         "200":
           description: "OK"
@@ -66,28 +75,26 @@ paths:
     post:
       summary: "Notify activation result for GP"
       description: "Legacy API supported of historical reasons"
-      deprecated: true
-      parameters:
-      - in: "body"
-        name: "transaction ID"
-        required: false
-        schema:
-          type: "object"
-          required:
-          - "transactionId"
-          properties:
-            transactionId:
-              type: "string"
-            message:
-              type: "string"
-            appId:
-              type: "string"
-            resultCode:
-              type: "integer"
-            subscriberId:
-              type: "string"
-            dryRun:
-              type: "boolean"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+              - "transactionId"
+              type: "object"
+              properties:
+                transactionId:
+                  type: "string"
+                message:
+                  type: "string"
+                appId:
+                  type: "string"
+                resultCode:
+                  type: "integer"
+                subscriberId:
+                  type: "string"
+                dryRun:
+                  type: "boolean"
       responses:
         "200":
           description: "OK"
@@ -98,10 +105,13 @@ paths:
           description: "Not found. (Transaction not found in cache)"
         "500":
           description: "Server Internal error"
-securityDefinitions:
-  application:
-    type: "oauth2"
-    tokenUrl: "https://connect.staging.telenordigital.com/oauth/token"
-    flow: "application"
-    scopes:
-      cco.dd.data-plan.inquire: "allows sending callback notice"
+      deprecated: true
+components:
+  securitySchemes:
+    application:
+      type: "oauth2"
+      flows:
+        clientCredentials:
+          tokenUrl: "https://connect.staging.telenordigital.com/oauth/token"
+          scopes:
+            cco.dd.data-plan.inquire: "allows sending callback notice"
