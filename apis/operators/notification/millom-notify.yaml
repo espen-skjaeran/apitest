@@ -188,7 +188,7 @@ components:
         type:
           type: "string"
           description: >
-            "Describes the state of the subscriber (reason for notification)
+            Describes the state of the subscriber (reason for notification)
             * `low-data` - User is out of data on all packs
             * `out-of-data` - User is running low on data on all packs
             * `pay-as-you-go` - User has no data packs provisioned and is paying per MB consumed
