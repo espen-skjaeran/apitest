@@ -59,12 +59,77 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NotifyRequest"
+            examples:
+              Pack near consumption:
+                description: "A user's plan is running low on data, about to be consumed\
+                  \ (~10 kB remaining)"
+                value:
+                  transactionId: "a9d37c79-1760-4008,"
+                  type: "pack-near-consumption,"
+                  messages:
+                    language: "en,"
+                    message: "Internet onetime (Volume) is almost used up. To renew\
+                      \ or find other best-valued packages, please go to promotion"
+                  planDetails:
+                    planId: "123456,"
+                    balance: "10345,"
+                    quota: "209715200,"
+                    planName:
+                      language: "en,"
+                      name: "Internet onetime (Volume)"
+              Pack expired:
+                value:
+                  transactionId: "123456,"
+                  type: "pack-expired,"
+                  planDetails:
+                    planId: "1234567,"
+                    balance: "102400000,"
+                    quota: "5012000000,"
+                    expiry: "2019-02-28T23:59:59.723+05:00"
+              Monetary topup:
+                description: "A user has topped up his/her monetary account with 5\
+                  \ Burmese Kyats"
+                value:
+                  transactionId: "2,"
+                  type: "monetary-reload,"
+                  monetaryBalance:
+                    totalBalance: "105.20,"
+                    deltaBalance: "5.00,"
+                    currency: "MMK"
+              Pay-as-you-go entered:
+                description: "Notification sent to signal that the subscriber has\
+                  \ entered pay-as-you-go state. deltaBalance == \"0.00\" signifies\
+                  \ that subscriber has just entered state. Note that deltaBalance\
+                  \ is required, whilst totalBalance is NOT required."
+                value:
+                  transactionId: "2,"
+                  type: "pay-as-you-go,"
+                  monetaryBalance:
+                    totalBalance: "105.20,"
+                    deltaBalance: "0.00,"
+                    currency: "MMK"
+              Pay-as-you-go money deducted:
+                description: "Notification sent to signal that the subscriber is in\
+                  \ pay-as-you-go state and money has been deducted. Note that monetary\
+                  \ balance element is present. deltaBalance == -10.00\" signifies\
+                  \ that subscriber has spent 10.00 since entering pay-as-you-go state.\
+                  \ Note that deltaBalance is required, whilst totalBalance is NOT\
+                  \ required."
+                value:
+                  transactionId: "2,"
+                  type: "pay-as-you-go,"
+                  monetaryBalance:
+                    totalBalance: "95.20,"
+                    deltaBalance: "-10.00,"
+                    currency: "MMK"
         required: true
       responses:
         "200":
           description: "OK"
+        "202":
+          description: "Queued. User is scheduled for notification"
         "400":
-          description: "Bad request (missing mandatory query parameters)"
+          description: "Bad request (wrongly formatted payload or missing mandatory parameters)"
         "401":
           description: "Unauthorized (missing or unauthorized access token)"
         "403":
@@ -74,8 +139,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
-          description: "User record not found (bad userId, or user is not known to\
-            \ OfferAPI)"
+          description: "User record not found (bad userId, or user is not known to OfferAPI)"
           content:
             '*/*':
               schema:
@@ -123,8 +187,17 @@ components:
           example: "a9d37c79-1760-4008-a468-c42e38a5c90e"
         type:
           type: "string"
-          description: "describes the state of the subscriber (why a notification\
-            \ is needed)"
+          description: >
+            "Describes the state of the subscriber (reason for notification)
+            * `low-data` - User is out of data on all packs
+            * `out-of-data` - User is running low on data on all packs
+            * `pay-as-you-go` - User has no data packs provisioned and is paying per MB consumed
+            * `pack-near-consumption` - One of the users' packs are soon being consumed
+            * `pack-consumed` - One of the users' packs have been consumed
+            * `pack-expired` - One of the user's pack has expired. Expiry date and time should be conveyed in planDetails.expiryTime
+            * `pack-near-expiry` - One of the user's packs is about to expire. Expiry date and time should be conveyed in planDetail.expiryTime
+            * `low-monetary-balance` - The user's monetary balance is low.
+            * `monetary-reload` - The user just topped up his monetary balance.
           example: "out-of-data"
           enum:
           - "low-data"
@@ -161,13 +234,14 @@ components:
                 \ consumed."
             balance:
               type: "number"
-              description: "Current available data balance of plan alerted about"
+              description: "Current available data balance, in bytes, of plan alerted\
+                \ about"
             quota:
               type: "number"
-              description: "Initial data balance of plan alerted about."
+              description: "Initial data balance of plan referred to, in bytes."
             planName:
               type: "array"
-              description: "The same string in multiple languages"
+              description: "Name of the plan referred to (in multiple languages)"
               items:
                 type: "object"
                 properties:
@@ -189,14 +263,17 @@ components:
             \ set if type is plan-consumed or plan-near-consumption"
         subscriptionType:
           type: "string"
-          description: "Whether user pays up front or is billed afterwards"
+          description: "Enum object. Whether user has a prepaid or postpaid subscription"
           enum:
           - "prepaid"
           - "postpaid"
         overUsagePolicy:
           type: "string"
           description: "The action taken on the subscriber's data connection once\
-            \ the last pack is consumed or expired."
+            \ the last pack is consumed or expired. * `throttled` - users internet\
+            \ access will be reduced in bandwidth * `pay-as-you-go` - The user will\
+            \ be billed per volume unit (MB) consumed * `blocked` - The user's data\
+            \ connection will be blocked\n"
           enum:
           - "throttled"
           - "pay-as-you-go"
