@@ -1,0 +1,109 @@
+---
+swagger: "2.0"
+info:
+  description: "Asynchronous callbacks with result from previous activations. The\
+    \ transaction ID provided must match an outstanding activation call to succeed."
+  version: "1.0.0"
+  title: "DDT callback API"
+host: "virtserver.swaggerhub.com"
+basePath: "/espens/callback/1.0.0"
+schemes:
+- "https"
+security:
+- application:
+  - "cco.dd.data-plan.inquire"
+paths:
+  /callback/v1/{operator}/:
+    post:
+      summary: "Notify activation result"
+      description: "This is an async callback with result on a subscriber's plan activation"
+      parameters:
+      - name: "operator"
+        in: "path"
+        description: "operator code for notifying operator (TP, GP)"
+        required: true
+        type: "string"
+      - name: "idValue"
+        in: "query"
+        description: "The user identifier string."
+        required: true
+        type: "string"
+      - name: "idType"
+        in: "query"
+        description: "The type of the userId in idValue. Can be either MSISDN or CPID"
+        required: true
+        type: "string"
+        enum:
+        - "MSISDN"
+        - "CPID"
+      - in: "body"
+        name: "transaction ID"
+        required: false
+        schema:
+          type: "object"
+          required:
+          - "transactionId"
+          properties:
+            transactionId:
+              type: "string"
+            message:
+              type: "string"
+            appId:
+              type: "string"
+            errorType:
+              type: "string"
+            dryRun:
+              type: "boolean"
+      responses:
+        "200":
+          description: "OK"
+        "400":
+          description: "Bad request. (missing mandatory query parameters or malformed\
+            \ body)"
+        "404":
+          description: "Not found. (Transaction not found in cache)"
+        "500":
+          description: "Server Internal error"
+  /api/callback/gp/:
+    post:
+      summary: "Notify activation result for GP"
+      description: "Legacy API supported of historical reasons"
+      deprecated: true
+      parameters:
+      - in: "body"
+        name: "transaction ID"
+        required: false
+        schema:
+          type: "object"
+          required:
+          - "transactionId"
+          properties:
+            transactionId:
+              type: "string"
+            message:
+              type: "string"
+            appId:
+              type: "string"
+            resultCode:
+              type: "integer"
+            subscriberId:
+              type: "string"
+            dryRun:
+              type: "boolean"
+      responses:
+        "200":
+          description: "OK"
+        "400":
+          description: "Bad request. (missing mandatory query parameters or malformed\
+            \ body)"
+        "404":
+          description: "Not found. (Transaction not found in cache)"
+        "500":
+          description: "Server Internal error"
+securityDefinitions:
+  application:
+    type: "oauth2"
+    tokenUrl: "https://connect.staging.telenordigital.com/oauth/token"
+    flow: "application"
+    scopes:
+      cco.dd.data-plan.inquire: "allows sending callback notice"
