@@ -135,38 +135,38 @@ paths:
         "403":
           description: "Forbidden (user has not given consent to notifications)"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: "User record not found (bad userId, or user is not known to OfferAPI)"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "409":
           description: "Bad userID (Not able to decode CPID, or flow does not support\
             \ this type of user ID)"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "429":
           description: "Too many requests (notification quota exceeded for this user)"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: "Server Internal Error (OfferAPI internal failure)"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "502":
           description: "Bad gateway (upstream notification failed)"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
