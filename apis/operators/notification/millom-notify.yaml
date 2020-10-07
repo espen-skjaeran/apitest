@@ -1,7 +1,7 @@
 ---
 openapi: "3.0.0"
 info:
-  title: "OfferAPI's Notification API"
+  title: "Millom's Notification API"
   description: "This defines the Notification API in OfferAPI, where operators are\
     \ allowed to notify OfferAPI on important changes in state of a subscriber. Supporting\
     \ notifications that a single user balance (plan time, -volume, or monetary balance)\
