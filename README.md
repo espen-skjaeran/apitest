@@ -1,6 +1,5 @@
-# Millom APIs
 ![Millom Logo](images/Millom_Colour-02.png )
-
+# Millom APIs
 This repo hosts the APIs specifications for working with Telenor's [Millom](https://millom.com/) platform.
 Millom is middleware exposing telco capabilities to third party Internet channels.
 Millom's APIs allow authorized clients to retrieve current subscription balance, 
