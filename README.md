@@ -1,5 +1,5 @@
 # Millom APIs
-![Millom Logo](images/Millom_Colour-02.png  | width=50)
+![Millom Logo](images/Millom_Colour-02.png )
 
 This repo hosts the APIs specifications for working with Telenor's [Millom](https://millom.com/) platform.
 Millom is middleware exposing telco capabilities to third party Internet channels.
