@@ -32,6 +32,6 @@ Millom has APIs for service providers and telco operators.
 
 | Service Providers | Operators |
 | ------ | ----------- |
-| Upsell API | [Operator backend integration](apis/operators/backend) | 
+| [Upsell API](apis/service-providers) | [Operator backend integration](apis/operators/backend) | 
 | | [Notification API](apis/operators/notification) |
 | | [Purchase callback API](apis/operators/purchase-callback) |
